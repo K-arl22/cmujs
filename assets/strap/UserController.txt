@@ -1,0 +1,103 @@
+<?php
+    class Users extends CI_Controller{
+        public function index(){
+            $data['title'] = 'User Lists';
+
+            $data['users'] = $this->user_model->get_users();
+
+			
+            $this->load->view('templates/header2', $data);
+			$this->load->view('users/index', $data);
+            $this->load->view('templates/footer2', $data);
+            
+
+        }
+
+        public function view($userid = NULL){
+            $data['user'] = $this->user_model->get_users($userid);
+
+            if(empty($data['user'])){
+                show_404();
+            }
+
+            // $this->load->view('templates/header2', $data);
+            $data['complete_name'] = $data['user']['complete_name'];
+            // $this->load->view('templates/footer2', $data);
+            
+			$this->load->view('users/view', $data);
+
+        }
+
+        //Route to Editing
+        public function edituser($userid) {
+            $data['user'] = $this->user_model->get_users($userid);
+    
+            if (empty($data['user'])) {
+                show_404();
+            }
+    
+            $data['title'] = 'Edit User';
+            $this->load->view('users/edituser', $data);
+        }
+
+
+
+        //Function to Update
+        public function update_user() {
+            $userid = $this->input->post('userid');
+    
+            $data = array(
+                'name' => $this->input->post('complete_name'),
+                'email' => $this->input->post('email'),
+                'cnum' => $this->input->post('contact_number'),
+                'pword' => $this->input->post('pword')
+            );
+    
+            if ($this->user_model->update_user($userid, $data)) {
+                // redirect('volumes/editvolume/' . $volumeid);
+                redirect('Users');
+            } else {
+                $this->session->set_flashdata('error', 'Failed to update volume');
+                // redirect('volumes/editvolume/' . $volumeid);
+                redirect('Users');
+            }
+        }
+
+
+        
+        //Adding User
+        public function newuser(){
+            $data['title'] = 'Add User';
+
+            $this->load->library('form_validation');
+            $this->load->library('session');
+
+            $this->form_validation->set_rules('name', 'Name' , 'required');
+            $this->form_validation->set_rules('email', 'Email' , 'required');
+            $this->form_validation->set_rules('number', 'Number' , 'required');
+            $this->form_validation->set_rules('password', 'Password' , 'required');
+
+            if($this->form_validation->run() === FALSE){
+                $this->load->view('users/newuser', $data);
+            } else {
+                $this->user_model->add_user();
+                $this->session->set_flashdata('user_added', 'User has been added successfully.');
+                redirect('Users');
+            }
+            
+        }
+
+
+        
+
+        //Function to Delete
+        public function deleteuser($userid) {
+    
+            $this->user_model->delete_user($userid);
+            redirect('Users');
+        }
+
+        
+
+        
+    }
